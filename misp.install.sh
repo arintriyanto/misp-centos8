@@ -107,6 +107,7 @@ yumInstallCoreDeps () {
                    libxslt-devel zlib-devel -y
 
   # ssdeep-devel available: dnf install https://extras.getpagespeed.com/release-el8-latest.rpm
+  dnf install https://extras.getpagespeed.com/release-el8-latest.rpm
   sudo alternatives --set python /usr/bin/python3
   
   # Enable and start redis
@@ -592,9 +593,8 @@ echo "[Unit]
   [Install]
   WantedBy=multi-user.target" |sudo tee /etc/systemd/system/misp-workers.service
   
-  sudo chmod +x $PATH_TO_MISP/app/Console/worker/start.sh
+  sudo chmod +x /var/www/MISP/app/Console/worker/start.sh
   sudo systemctl daemon-reload
-   
   sudo checkmodule -M -m -o /tmp/workerstartsh.mod $PATH_TO_MISP/INSTALL/workerstartsh.te
   sudo semodule_package -o /tmp/workerstartsh.pp -m /tmp/workerstartsh.mod
   sudo semodule -i /tmp/workerstartsh.pp
@@ -799,8 +799,6 @@ theEndRHEL () {
 # Main Install on RHEL function
 installMISPRHEL () {
     
-    hostnamectl set-hostname ${HOSTNAME}
-    
     echo "Proceeding with MISP core installation on RHEL ${dist_version}"
     space
     id -u "${MISP_USER}" > /dev/null
@@ -860,6 +858,9 @@ installMISPRHEL () {
 }
 # End installMISPRHEL ()
 ## End Function Section ##
+
+sudo hostnamectl set-hostname ${HOSTNAME}
+sudo exec bash
 
 echo "Checking Linux distribution and flavour..."
 checkFlavour
