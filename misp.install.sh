@@ -91,11 +91,12 @@ enableREMI () {
 
 yumInstallCoreDeps () {
   # Install the dependencies:
-  
+  dnf install https://extras.getpagespeed.com/release-el8-latest.rpm -y
+
   sudo dnf install @httpd -y
   sudo dnf install @mariadb -y
 
-  sudo dnf install gcc git zip \
+  sudo dnf install gcc git zip ssdeep \
                    httpd \
                    mod_ssl \
                    redis \
@@ -107,7 +108,7 @@ yumInstallCoreDeps () {
                    libxslt-devel zlib-devel -y
 
   # ssdeep-devel available: dnf install https://extras.getpagespeed.com/release-el8-latest.rpm
-  dnf install https://extras.getpagespeed.com/release-el8-latest.rpm
+  
   sudo alternatives --set python /usr/bin/python3
   
   # Enable and start redis
