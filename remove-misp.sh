@@ -1,15 +1,19 @@
 #!/usr/bin/env bash
 
 echo "Remove Development Tools"
+sleep 2
 dnf groupremove "Development Tools" -y
 
 echo "Remove HTPPD"
+sleep 2
 dnf remove @httpd -y
 
 echo "Remove mariadb"
+sleep 2
 dnf remove @mariadb -y
 
 echo "Remove Dependencies"
+sleep 2
 dnf remove gcc zip \
         httpd \
         mod_ssl \
@@ -21,7 +25,8 @@ dnf remove gcc zip \
         policycoreutils-python-utils \
         libxslt-devel zlib-devel -y
 
-echo "Remove Php & Dependencies"					 
+echo "Remove Php & Dependencies"
+sleep 2			 
 dnf remove php php-fpm php-devel php-pear \
         php-mysqlnd \
         php-ssdeep \
@@ -36,6 +41,7 @@ dnf remove php php-fpm php-devel php-pear \
         php-gd -y
 
 echo "Delete local direcotory"
+sleep 2
 userdel misp
 rm -rf /var/lib/mariadb
 rm -rf /var/lib/mysql/
@@ -48,8 +54,9 @@ rm -rf /etc/php.d
 rm -rf /var/log/httpd/
 rm -rf /var/log/php-fpm/
 rm -rf /var/log/mariadb/
-
+sleep 2
 ldconfig
 
 echo "Reboot"
+sleep 5
 reboot
