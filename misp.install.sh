@@ -85,12 +85,16 @@ enableEPEL () {
   sudo yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm -y
 }
 
+enableREMI () {
+  sudo dnf install dnf-utils http://rpms.remirepo.net/enterprise/remi-release-8.rpm -y
+}
+
 yumInstallCoreDeps () {
   # Install the dependencies:
   sudo yum install @httpd -y
   sudo dnf install @mariadb -y
 
-  sudo yum install gcc gcc-c++ ibcaca-devel git zip \
+  sudo yum install gcc git zip \
                    httpd \
                    mod_ssl \
                    redis \
@@ -103,9 +107,12 @@ yumInstallCoreDeps () {
 
   # ssdeep-devel available: dnf install https://extras.getpagespeed.com/release-el8-latest.rpm
   sudo alternatives --set python /usr/bin/python3
-
+  
   # Enable and start redis
   sudo systemctl enable --now redis.service
+  
+  dnf module reset php -y
+  dnf module enable php:remi-7.2 -y
 
   #PHP_INI=/etc/php.ini
   sudo yum install php php-fpm php-devel php-pear \
@@ -117,6 +124,8 @@ yumInstallCoreDeps () {
        php-json \
        php-zip \
        php-gd -y
+  
+  sudo dnf install -y php-pecl-redis5
 
   sudo yum install python3 python3-devel -y
   sudo systemctl restart php-fpm.service
@@ -222,6 +231,8 @@ installCoreRHEL () {
   $SUDO_WWW $PATH_TO_MISP/venv/bin/pip install -U .
 
   # Gtcaca & Faup needs manual compilation
+  sudo yum install gcc-c++ libcaca-devel -y
+
   cd /tmp
   #$SUDO_CMD git clone https://github.com/MISP/misp-modules.git;
   $SUDO_CMD git clone https://github.com/stricaud/gtcaca.git gtcaca
@@ -277,15 +288,16 @@ installCake_RHEL ()
   ## sudo yum install php-redis -y
   sudo pecl channel-update pecl.php.net
   #sudo pecl install redis
-  sudo yes no|pecl install redis
-  echo "extension=redis.so" |sudo tee /etc/php-fpm.d/redis.ini
-  sudo ln -s /etc/php-fpm.d/redis.ini /etc/php.d/99-redis.ini
+  #sudo yes no|pecl install redis
+  #echo "extension=redis.so" |sudo tee /etc/php-fpm.d/redis.ini
+  #sudo ln -s /etc/php-fpm.d/redis.ini /etc/php.d/99-redis.ini
+  
   sudo systemctl restart php-fpm.service
 
-  sudo ln -s /usr/lib64/libfuzzy.so /usr/lib/libfuzzy.so
-  sudo pecl install ssdeep
-  echo "extension=ssdeep.so" |sudo tee /etc/php-fpm.d/99-ssdeep.ini
-  sudo chmod 644 /etc/php-fpm.d/99-ssdeep.ini
+  #sudo ln -s /usr/lib64/libfuzzy.so /usr/lib/libfuzzy.so
+  #sudo pecl install ssdeep
+  #echo "extension=ssdeep.so" |sudo tee /etc/php-fpm.d/99-ssdeep.ini
+  #sudo chmod 644 /etc/php-fpm.d/99-ssdeep.ini
 
   #Install gnupg extension
   #sudo yum install gpgme-devel -y
