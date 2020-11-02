@@ -124,6 +124,7 @@ yumInstallCoreDeps () {
        php-xml \
        php-bcmath \
        php-opcache \
+       php-pecl-redis5 \
        php-json \
        php-zip \
        php-gd -y
@@ -292,8 +293,8 @@ installCake_RHEL ()
   sudo pecl channel-update pecl.php.net
   #sudo pecl install redis
   sudo yes no|pecl install redis
-  echo "extension=redis.so" |sudo tee /etc/php-fpm.d/redis.ini
-  sudo ln -s /etc/php-fpm.d/redis.ini /etc/php.d/99-redis.ini
+  echo "extension=redis.so" |sudo tee /etc/php.d/99-redis.ini
+
   sudo systemctl restart php-fpm.service
 
   #sudo ln -s /usr/lib64/libfuzzy.so /usr/lib/libfuzzy.so
@@ -453,6 +454,8 @@ firewall_RHEL () {
 
 # Main function to fix permissions to something sane
 permissions_RHEL () {
+
+  sudo restorecon -R /tmp
   sudo chown -R $WWW_USER:$WWW_USER $PATH_TO_MISP
   ## ? chown -R root:$WWW_USER $PATH_TO_MISP
   sudo find $PATH_TO_MISP -type d -exec chmod g=rx {} \;
@@ -594,6 +597,8 @@ echo "[Unit]
   [Install]
   WantedBy=multi-user.target" |sudo tee /etc/systemd/system/misp-workers.service
   
+  sudo /sbin/restorecon -v /var/www/MISP/app/Console/worker/start.sh
+
   sudo chmod +x /var/www/MISP/app/Console/worker/start.sh
   sudo systemctl daemon-reload
   sudo checkmodule -M -m -o /tmp/workerstartsh.mod $PATH_TO_MISP/INSTALL/workerstartsh.te
@@ -862,7 +867,6 @@ installMISPRHEL () {
 
 sudo hostnamectl set-hostname ${HOSTNAME}
 sudo exec bash
-
 echo "Checking Linux distribution and flavour..."
 checkFlavour
 echo "Setting MISP variables"
