@@ -62,4 +62,4 @@ ldconfig
 
 echo "Reboot"
 sleep 2
-reboot
+#reboot

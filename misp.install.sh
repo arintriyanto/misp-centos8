@@ -269,8 +269,6 @@ installCoreRHEL () {
   # Enable dependencies detection in the diagnostics page
   # This allows MISP to detect GnuPG, the Python modules' versions and to read the PHP settings.
   echo "env[PATH] = /usr/local/bin:/usr/bin:/bin" |sudo tee -a /etc/php-fpm.d/www.conf
-  ;env[PATH] = /usr/local/bin:/usr/bin:/bin
-
   #echo "env[LD_LIBRARY_PATH] = /opt/rh/httpd24/root/usr/lib64" |sudo tee -a /etc/php-fpm.d/www.conf
   
   sudo systemctl restart php-fpm.service
