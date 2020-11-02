@@ -214,19 +214,18 @@ installCoreRHEL () {
   echo $PATH_TO_MISP/app/files/scripts/lief/build/api/python |$SUDO_WWW tee $PATH_TO_MISP/venv/lib/python3.6/site-packages/lief.pth
 
   # install magic, pydeep
-  $SUDO_WWW $PATH_TO_MISP/venv/bin/pip install -U python-magic git+https://github.com/kbandla/pydeep.git plyara
+  #$SUDO_WWW $PATH_TO_MISP/venv/bin/pip install -U python-magic git+https://github.com/kbandla/pydeep.git plyara
+  $SUDO_WWW $PATH_TO_MISP/venv/bin/pip install -U python-magic plyara
 
   # install PyMISP
   cd $PATH_TO_MISP/PyMISP
   $SUDO_WWW $PATH_TO_MISP/venv/bin/pip install -U .
 
   # Gtcaca & Faup needs manual compilation
-  #sudo yum install gcc-c++ libcaca-devel -y
   cd /tmp
   #$SUDO_CMD git clone https://github.com/MISP/misp-modules.git;
   $SUDO_CMD git clone https://github.com/stricaud/gtcaca.git gtcaca
   $SUDO_CMD git clone https://github.com/stricaud/faup.git faup
-  #sudo chown -R ${$WWW_USER}:${$WWW_USER} faup gtcaca
   sudo chown -R ${MISP_USER}:${MISP_USER} gtcaca faup
   cd gtcaca
   $SUDO_CMD mkdir -p build
@@ -288,14 +287,11 @@ installCake_RHEL ()
   echo "extension=ssdeep.so" |sudo tee /etc/php-fpm.d/99-ssdeep.ini
   sudo chmod 644 /etc/php-fpm.d/99-ssdeep.ini
 
-  #echo "extension=ssdeep.so" |sudo tee /etc/opt/rh/rh-php72/php-fpm.d/ssdeep.ini
-  #sudo ln -s /etc/opt/rh/rh-php72/php-fpm.d/ssdeep.ini /etc/opt/rh/rh-php72/php.d/99-ssdeep.ini
-
   #Install gnupg extension
-  sudo yum install gpgme-devel -y
-  sudo pecl install gnupg
-  echo "extension=gnupg.so" |sudo tee etc/php-fpm.d/99-gnupg.ini
-  sudo chmod 644 tee etc/php-fpm.d/99-gnupg.ini
+  #sudo yum install gpgme-devel -y
+  #sudo pecl install gnupg
+  #echo "extension=gnupg.so" |sudo tee etc/php-fpm.d/99-gnupg.ini
+  #sudo chmod 644 tee etc/php-fpm.d/99-gnupg.ini
 
   # If you have not yet set a timezone in php.ini
   echo 'date.timezone = "Asia/Jakarta"' |sudo tee /etc/php-fpm.d/timezone.ini
@@ -411,7 +407,9 @@ apacheConfig_RHEL () {
   sudo chcon -t httpd_sys_script_exec_t $PATH_TO_MISP/app/files/scripts/*/*.py
   sudo chcon -t httpd_sys_script_exec_t $PATH_TO_MISP/app/files/scripts/lief/build/api/python/lief.so
   sudo chcon -t httpd_sys_script_exec_t $PATH_TO_MISP/app/Vendor/pear/crypt_gpg/scripts/crypt-gpg-pinentry
-  sudo chcon -R -t bin_t $PATH_TO_MISP/venv/bin/*
+  sudo chcon -t httpd_sys_rw_content_t /tmp
+  sudo chcon -R -t usr_t $PATH_TO_MISP/venv
+ 
   find $PATH_TO_MISP/venv -type f -name "*.so*" -or -name "*.so.*" | xargs sudo chcon -t lib_t
   # Only run these if you want to be able to update MISP from the web interface
   sudo chcon -R -t httpd_sys_rw_content_t $PATH_TO_MISP/.git
@@ -471,11 +469,12 @@ logRotation_RHEL () {
 
   # Now make logrotate work under SELinux as well
   # Allow logrotate to modify the log files
-  sudo semanage fcontext -a -t httpd_sys_rw_content_t "$PATH_TO_MISP(/.*)?"
+  sudo semanage fcontext -a -t httpd_sys_rw_content_t "/var/www/MISP(/.*)?"
   sudo semanage fcontext -a -t httpd_log_t "$PATH_TO_MISP/app/tmp/logs(/.*)?"
   sudo chcon -R -t httpd_log_t $PATH_TO_MISP/app/tmp/logs
+  sudo chcon -R -t httpd_sys_rw_content_t $PATH_TO_MISP/app/tmp/logs
   # Impact of the following: ?!?!?!!?111
-  ##sudo restorecon -R $PATH_TO_MISP
+  ##sudo restorecon -R /var/www/MISP/
 
   # Allow logrotate to read /var/www
   sudo checkmodule -M -m -o /tmp/misplogrotate.mod $PATH_TO_MISP/INSTALL/misplogrotate.te
