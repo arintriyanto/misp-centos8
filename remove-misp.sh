@@ -36,13 +36,20 @@ dnf remove php php-fpm php-devel php-pear \
         php-gd -y
 
 echo "Delete local direcotory"
-
+userdel misp
 rm -rf /var/lib/mariadb
+rm -rf /var/lib/mysql/
+rm -rf /etc/my.cnf.d/
 rm -rf /home/misp
 rm -rf /usr/share/mariadb
 rm -rf /etc/httpd
 rm -rf /etc/php-fpm.d
 rm -rf /etc/php.d
+rm -rf /var/log/httpd/
+rm -rf /var/log/php-fpm/
+rm -rf /var/log/mariadb/
+
+ldconfig
 
 echo "Reboot"
 reboot
