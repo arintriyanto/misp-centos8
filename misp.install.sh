@@ -261,7 +261,7 @@ installCoreRHEL () {
   
   # Enable python3 for php-fpm
   sudo sed -i.org -e 's/^;\(clear_env = no\)/\1/' /etc/php-fpm.d/www.conf
-  sudo sed -i.org -e 's/listen = \/run\/php-fpm\/www.sock/listen = 127.0.0.1:9000/' /etc/php-fpm.d/www.conf
+  sudo sed -i s'/listen = \/run\/php-fpm\/www.sock/listen = 127.0.0.1:9000/' /etc/php-fpm.d/www.conf
 
   sudo systemctl restart php-fpm.service
   umask $UMASK

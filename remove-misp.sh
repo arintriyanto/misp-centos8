@@ -1,0 +1,37 @@
+  #!/usr/bin/env bash
+
+  dnf groupremove "Development Tools" -y
+  dnf remove @httpd -y
+  dnf remove @mariadb -y
+  dnf remove gcc git zip \
+        httpd \
+        mod_ssl \
+        redis \
+        mariadb \
+        mariadb-server \
+        python3-devel python3-pip python3-virtualenv \
+        python3-policycoreutils \
+        policycoreutils-python-utils \
+        libxslt-devel zlib-devel -y
+					 
+   dnf remove php php-fpm php-devel php-pear \
+        php-mysqlnd \
+        php-ssdeep \
+        php-intl \
+        php-mbstring \
+        php-xml \
+        php-bcmath \
+        php-opcache \
+        php-pecl-redis5 \
+        php-json \
+        php-zip \
+        php-gd -y
+		
+   rm -rf /var/lib/mariadb
+   rm -rf /home/misp
+   rm -rf /usr/share/mariadb
+   rm -rf /etc/httpd
+   rm -rf /etc/php-fpm.d
+   rm -rf /etc/php.d
+
+   reboot
