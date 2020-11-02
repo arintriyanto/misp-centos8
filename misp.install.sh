@@ -808,10 +808,11 @@ installMISPRHEL () {
     sudo useradd "${MISP_USER}"
 
     sudo yum update
-    sudo yum install vim drpm -y
 
     echo "Installing Centos EPEL..."
     centosEPEL
+    enableEPEL
+    enableREMI
 
     echo "Installing System Dependencies"
     yumInstallCoreDeps
