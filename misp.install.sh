@@ -292,8 +292,8 @@ installCake_RHEL ()
   ## sudo yum install php-redis -y
   sudo pecl channel-update pecl.php.net
   #sudo pecl install redis
-  sudo yes no|pecl install redis
-  echo "extension=redis.so" |sudo tee /etc/php.d/99-redis.ini
+  #sudo yes no|pecl install redis
+  #echo "extension=redis.so" |sudo tee /etc/php.d/99-redis.ini
 
   sudo systemctl restart php-fpm.service
 
@@ -597,15 +597,18 @@ echo "[Unit]
   [Install]
   WantedBy=multi-user.target" |sudo tee /etc/systemd/system/misp-workers.service
   
-  sudo /sbin/restorecon -v /var/www/MISP/app/Console/worker/start.sh
+  #sudo /sbin/restorecon -v /var/www/MISP/app/Console/worker/start.sh
+  #sudo chmod +x /var/www/MISP/app/Console/worker/start.sh
+  #sudo systemctl daemon-reload
+  #sudo checkmodule -M -m -o /tmp/workerstartsh.mod $PATH_TO_MISP/INSTALL/workerstartsh.te
+  #sudo semodule_package -o /tmp/workerstartsh.pp -m /tmp/workerstartsh.mod
+  #sudo semodule -i /tmp/workerstartsh.pp
 
-  sudo chmod +x /var/www/MISP/app/Console/worker/start.sh
+  sudo chmod +x $PATH_TO_MISP/app/Console/worker/start.sh
   sudo systemctl daemon-reload
-  sudo checkmodule -M -m -o /tmp/workerstartsh.mod $PATH_TO_MISP/INSTALL/workerstartsh.te
-  sudo semodule_package -o /tmp/workerstartsh.pp -m /tmp/workerstartsh.mod
-  sudo semodule -i /tmp/workerstartsh.pp
 
   sudo systemctl enable --now misp-workers.service
+
 }
 
 coreCAKERHEL () {
