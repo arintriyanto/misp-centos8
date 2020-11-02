@@ -89,8 +89,8 @@ yumInstallCoreDeps () {
   # Install the dependencies:
   sudo yum install @httpd -y
   sudo dnf install @mariadb -y
-  
-  sudo yum install gcc git zip \
+
+  sudo yum install gcc gcc-c++ ibcaca-devel git zip \
                    httpd \
                    mod_ssl \
                    redis \
@@ -100,6 +100,7 @@ yumInstallCoreDeps () {
                    python3-policycoreutils \
                    policycoreutils-python-utils \
                    libxslt-devel zlib-devel -y
+
   # ssdeep-devel available: dnf install https://extras.getpagespeed.com/release-el8-latest.rpm
   sudo alternatives --set python /usr/bin/python3
 
@@ -220,7 +221,7 @@ installCoreRHEL () {
   $SUDO_WWW $PATH_TO_MISP/venv/bin/pip install -U .
 
   # Gtcaca & Faup needs manual compilation
-  sudo yum install gcc-c++ libcaca-devel -y
+  #sudo yum install gcc-c++ libcaca-devel -y
   cd /tmp
   #$SUDO_CMD git clone https://github.com/MISP/misp-modules.git;
   $SUDO_CMD git clone https://github.com/stricaud/gtcaca.git gtcaca
@@ -282,22 +283,19 @@ installCake_RHEL ()
   sudo ln -s /etc/php-fpm.d/redis.ini /etc/php.d/99-redis.ini
   sudo systemctl restart php-fpm.service
 
-  #sudo ln -s /usr/lib64/libfuzzy.so /usr/lib/libfuzzy.so
-  #sudo scl enable rh-php72 'pecl install ssdeep'
-  #echo "extension=ssdeep.so" |sudo tee /etc/opt/rh/rh-php72/php.d/99-ssdeep.ini
-  #sudo chmod 644 /etc/opt/rh/rh-php72/php.d/99-ssdeep.ini
+  sudo ln -s /usr/lib64/libfuzzy.so /usr/lib/libfuzzy.so
+  sudo pecl install ssdeep
+  echo "extension=ssdeep.so" |sudo tee /etc/php-fpm.d/99-ssdeep.ini
+  sudo chmod 644 /etc/php-fpm.d/99-ssdeep.ini
 
   #echo "extension=ssdeep.so" |sudo tee /etc/opt/rh/rh-php72/php-fpm.d/ssdeep.ini
   #sudo ln -s /etc/opt/rh/rh-php72/php-fpm.d/ssdeep.ini /etc/opt/rh/rh-php72/php.d/99-ssdeep.ini
 
-  # Install gnupg extension
-  #sudo yum install gpgme-devel -y
-  
-  #sudo scl enable rh-php72 'pecl install gnupg'
-  #echo "extension=gnupg.so" |sudo tee /etc/opt/rh/rh-php72/php.d/99-gnupg.ini
-  #sudo chmod 644 /etc/opt/rh/rh-php72/php.d/99-gnupg.ini
-  #echo "extension=gnupg.so" |sudo tee /etc/opt/rh/rh-php72/php-fpm.d/gnupg.ini
-  #sudo ln -s /etc/opt/rh/rh-php72/php-fpm.d/gnupg.ini /etc/opt/rh/rh-php72/php.d/99-gnupg.ini
+  #Install gnupg extension
+  sudo yum install gpgme-devel -y
+  sudo pecl install gnupg
+  echo "extension=gnupg.so" |sudo tee etc/php-fpm.d/99-gnupg.ini
+  sudo chmod 644 tee etc/php-fpm.d/99-gnupg.ini
 
   # If you have not yet set a timezone in php.ini
   echo 'date.timezone = "Asia/Jakarta"' |sudo tee /etc/php-fpm.d/timezone.ini
@@ -568,15 +566,15 @@ EOF
 }
 
 configWorkersRHEL () {
-  echo "[Unit]
+echo "[Unit]
   Description=MISP background workers
-  After=rh-mariadb101-mariadb.service rh-redis32-redis.service rh-php72-php-fpm.service
+  After=mariadb.service redis.service fpm.service
 
   [Service]
   Type=forking
-  User=$WWW_USER
-  Group=$WWW_USER
-  ExecStart=/usr/bin/scl enable rh-php72 rh-redis32 rh-mariadb101 $PATH_TO_MISP/app/Console/worker/start.sh
+  User=apache
+  Group=apache
+  ExecStart=/var/www/MISP/app/Console/worker/start.sh
   Restart=always
   RestartSec=10
 
@@ -727,11 +725,11 @@ coreCAKERHEL () {
 updateGOWNTRHEL () {
   # AUTH_KEY Place holder in case we need to **curl** somehing in the future
   # 
-  $SUDO_WWW $RUN_MYSQL -- mysql -u $DBUSER_MISP -p$DBPASSWORD_MISP misp -e "SELECT authkey FROM users;" | tail -1 > /tmp/auth.key
+  sudo mysql -u $DBUSER_MISP -p$DBPASSWORD_MISP misp -e "SELECT authkey FROM users;" | tail -1 > /tmp/auth.key
   AUTH_KEY=$(cat /tmp/auth.key)
   rm /tmp/auth.key
 
-  echo "Updating Galaxies, ObjectTemplates, Warninglists, Noticelists and Templates"
+  debug "Updating Galaxies, ObjectTemplates, Warninglists, Noticelists and Templates"
   # Update the galaxies…
   # TODO: Fix updateGalaxies
   $SUDO_WWW $RUN_PHP -- $CAKE Admin updateGalaxies
