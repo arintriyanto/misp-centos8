@@ -86,35 +86,36 @@ enableEPEL () {
 
 yumInstallCoreDeps () {
   # Install the dependencies:
-  sudo yum install gcc git zip rh-git218 \
-                   htop \
-                   httpd24 \
+  sudo yum install @httpd -y
+  sudo yum install gcc git zip \
+                   httpd \
                    mod_ssl \
-                   rh-redis32 \
-                   rh-mariadb101 \
-                   libxslt-devel zlib-devel ssdeep-devel -y
+                   redis \
+                   mariadb \
+                   mariadb-server \
+                   python3-devel python3-pip python3-virtualenv \
+                   python3-policycoreutils \
+                   policycoreutils-python-utils \
+                   libxslt-devel zlib-devel -y
+  # ssdeep-devel available: dnf install https://extras.getpagespeed.com/release-el8-latest.rpm
+  sudo alternatives --set python /usr/bin/python3
 
   # Enable and start redis
-  sudo systemctl enable --now rh-redis32-redis.service
+  sudo systemctl enable --now redis.service
 
-  # Install PHP 7.2 from SCL, see https://www.softwarecollections.org/en/scls/rhscl/rh-php72/
-  sudo yum install rh-php72 rh-php72-php-fpm rh-php72-php-devel \
-                   rh-php72-php-mysqlnd \
-                   rh-php72-php-mbstring \
-                   rh-php72-php-xml \
-                   rh-php72-php-intl \
-                   rh-php72-php-bcmath \
-                   rh-php72-php-opcache \
-                   rh-php72-php-gd -y
+  #PHP_INI=/etc/php.ini
+  sudo yum install php php-fpm php-devel php-pear \
+       php-mysqlnd \
+       php-mbstring \
+       php-xml \
+       php-bcmath \
+       php-opcache \
+       php-json \
+       php-zip \
+       php-gd -y
 
-  # Python 3.6 is now available in RHEL 7.7 base
-  sudo yum install python3 python3-pip python3-devel -y
-  
-  # Install Python 3.6 from SCL, see
-  # https://www.softwarecollections.org/en/scls/rhscl/rh-python36/
-  #sudo yum install rh-python36 -y
-
-  sudo systemctl enable --now rh-php72-php-fpm.service
+  sudo yum install python3 python3-devel -y
+  sudo systemctl restart php-fpm.service
 }
 
 installCoreRHEL () {
@@ -138,9 +139,7 @@ installCoreRHEL () {
   $SUDO_WWW git config core.filemode false
 
   # Create a python3 virtualenv
-  sudo pip3 install virtualenv
-  $SUDO_WWW python3 -m venv $PATH_TO_MISP/venv
-  #$SUDO_WWW $RUN_PYTHON -- virtualenv -p python3 $PATH_TO_MISP/venv
+  $SUDO_WWW virtualenv-3 -p python3 $PATH_TO_MISP/venv
   sudo mkdir /usr/share/httpd/.cache
   sudo chown $WWW_USER:$WWW_USER /usr/share/httpd/.cache
   $SUDO_WWW $PATH_TO_MISP/venv/bin/pip install -U pip setuptools
@@ -179,7 +178,8 @@ installCoreRHEL () {
   $SUDO_WWW $PATH_TO_MISP/venv/bin/pip install -U redis
 
   # lief needs manual compilation
-  sudo yum install devtoolset-7 cmake3 cppcheck libcxx-devel -y
+  sudo yum groupinstall "Development Tools" -y
+  sudo yum install cmake3 -y
 
   cd $PATH_TO_MISP/app/files/scripts/lief
   $SUDO_WWW mkdir build
@@ -239,11 +239,22 @@ installCoreRHEL () {
   # Enable dependencies detection in the diagnostics page
   # This allows MISP to detect GnuPG, the Python modules' versions and to read the PHP settings.
   # The LD_LIBRARY_PATH setting is needed for rh-git218 to work
-  echo "env[PATH] = /opt/rh/rh-git218/root/usr/bin:/opt/rh/rh-redis32/root/usr/bin:/opt/rh/rh-php72/root/usr/bin:/usr/local/bin:/usr/bin:/bin" |sudo tee -a /etc/opt/rh/rh-php72/php-fpm.d/www.conf
-  echo "env[LD_LIBRARY_PATH] = /opt/rh/httpd24/root/usr/lib64" |sudo tee -a /etc/opt/rh/rh-php72/php-fpm.d/www.conf
-  sudo sed -i.org -e 's/^;\(clear_env = no\)/\1/' /etc/opt/rh/rh-php72/php-fpm.d/www.conf
-  sudo systemctl restart rh-php72-php-fpm.service
+  #echo "env[PATH] = /opt/rh/rh-git218/root/usr/bin:/opt/rh/rh-redis32/root/usr/bin:/opt/rh/rh-php72/root/usr/bin:/usr/local/bin:/usr/bin:/bin" |sudo tee -a /etc/opt/rh/rh-php72/php-fpm.d/www.conf
+  #echo "env[LD_LIBRARY_PATH] = /opt/rh/httpd24/root/usr/lib64" |sudo tee -a /etc/opt/rh/rh-php72/php-fpm.d/www.conf
+  #sudo sed -i.org -e 's/^;\(clear_env = no\)/\1/' /etc/opt/rh/rh-php72/php-fpm.d/www.conf
+  
+  # Enable python3 for php-fpm
+  sudo sed -i.org -e 's/^;\(clear_env = no\)/\1/' /etc/php-fpm.d/www.conf
+  sudo systemctl restart php-fpm.service
   umask $UMASK
+  
+  # Enable dependencies detection in the diagnostics page
+  # This allows MISP to detect GnuPG, the Python modules' versions and to read the PHP settings.
+  echo "env[PATH] = /usr/local/bin:/usr/bin:/bin" |sudo tee -a /etc/php-fpm.d/www.conf
+  #echo "env[LD_LIBRARY_PATH] = /opt/rh/httpd24/root/usr/lib64" |sudo tee -a /etc/php-fpm.d/www.conf
+
+  sudo systemctl restart php-fpm.service
+
 }
 
 installCake_RHEL ()
@@ -261,35 +272,32 @@ installCake_RHEL ()
   $SUDO_WWW $RUN_PHP "php composer.phar install"
 
   ## sudo yum install php-redis -y
-  sudo scl enable rh-php72 'pecl channel-update pecl.php.net'
-  sudo scl enable rh-php72 'yes no|pecl install redis'
-  echo "extension=redis.so" |sudo tee /etc/opt/rh/rh-php72/php.d/99-redis.ini
-  sudo chmod 644 /etc/opt/rh/rh-php72/php.d/99-redis.ini
-  #echo "extension=redis.so" |sudo tee /etc/opt/rh/rh-php72/php-fpm.d/redis.ini
-  #sudo ln -s /etc/opt/rh/rh-php72/php-fpm.d/redis.ini /etc/opt/rh/rh-php72/php.d/99-redis.ini
+  sudo pecl channel-update pecl.php.net
+  sudo pecl install redis
+  echo "extension=redis.so" |sudo tee /etc/php-fpm.d/redis.ini
+  sudo ln -s /etc/php-fpm.d/redis.ini /etc/php.d/99-redis.ini
+  sudo systemctl restart php-fpm.service
 
-  sudo ln -s /usr/lib64/libfuzzy.so /usr/lib/libfuzzy.so
-  sudo scl enable rh-php72 'pecl install ssdeep'
-  echo "extension=ssdeep.so" |sudo tee /etc/opt/rh/rh-php72/php.d/99-ssdeep.ini
-  sudo chmod 644 /etc/opt/rh/rh-php72/php.d/99-ssdeep.ini
+  #sudo ln -s /usr/lib64/libfuzzy.so /usr/lib/libfuzzy.so
+  #sudo scl enable rh-php72 'pecl install ssdeep'
+  #echo "extension=ssdeep.so" |sudo tee /etc/opt/rh/rh-php72/php.d/99-ssdeep.ini
+  #sudo chmod 644 /etc/opt/rh/rh-php72/php.d/99-ssdeep.ini
 
   #echo "extension=ssdeep.so" |sudo tee /etc/opt/rh/rh-php72/php-fpm.d/ssdeep.ini
   #sudo ln -s /etc/opt/rh/rh-php72/php-fpm.d/ssdeep.ini /etc/opt/rh/rh-php72/php.d/99-ssdeep.ini
 
   # Install gnupg extension
-  sudo yum install gpgme-devel -y
+  #sudo yum install gpgme-devel -y
   
-  sudo scl enable rh-php72 'pecl install gnupg'
-  echo "extension=gnupg.so" |sudo tee /etc/opt/rh/rh-php72/php.d/99-gnupg.ini
-  sudo chmod 644 /etc/opt/rh/rh-php72/php.d/99-gnupg.ini
+  #sudo scl enable rh-php72 'pecl install gnupg'
+  #echo "extension=gnupg.so" |sudo tee /etc/opt/rh/rh-php72/php.d/99-gnupg.ini
+  #sudo chmod 644 /etc/opt/rh/rh-php72/php.d/99-gnupg.ini
   #echo "extension=gnupg.so" |sudo tee /etc/opt/rh/rh-php72/php-fpm.d/gnupg.ini
   #sudo ln -s /etc/opt/rh/rh-php72/php-fpm.d/gnupg.ini /etc/opt/rh/rh-php72/php.d/99-gnupg.ini
 
   # If you have not yet set a timezone in php.ini
-  echo 'date.timezone = "Asia/Jakarta"' |sudo tee /etc/opt/rh/rh-php72/php.d/99-timezone.ini
-  sudo chmod 644 /etc/opt/rh/rh-php72/php.d/99-timezone.ini
-  #sudo ln -s ../php-fpm.d/timezone.ini /etc/opt/rh/rh-php72/php.d/99-timezone.ini
-  sudo systemctl restart rh-php72-php-fpm.service
+  echo 'date.timezone = "Asia/Jakarta"' |sudo tee /etc/php-fpm.d/timezone.ini
+  sudo ln -s ../php-fpm.d/timezone.ini /etc/php.d/99-timezone.ini
 
   # Recommended: Change some PHP settings in /etc/opt/rh/rh-php72/php.ini
   # max_execution_time = 300
@@ -300,49 +308,35 @@ installCake_RHEL ()
   do
       sudo sed -i "s/^\($key\).*/\1 = $(eval echo \${$key})/" $PHP_INI
   done
-  sudo systemctl restart rh-php72-php-fpm.service
+  sudo systemctl restart php-fpm.service
 
   # To use the scheduler worker for scheduled tasks, do the following:
   sudo cp -fa $PATH_TO_MISP/INSTALL/setup/config.php $PATH_TO_MISP/app/Plugin/CakeResque/Config/config.php
 }
 
 prepareDB_RHEL () {
-  RUN_MYSQL="/usr/bin/scl enable rh-mariadb101"
   # Enable, start and secure your mysql database server
-  sudo systemctl enable --now rh-mariadb101-mariadb.service
-  echo [mysqld] |sudo tee /etc/opt/rh/rh-mariadb101/my.cnf.d/bind-address.cnf
-  echo bind-address=127.0.0.1 |sudo tee -a /etc/opt/rh/rh-mariadb101/my.cnf.d/bind-address.cnf
-   
-  echo [mysqld] |sudo tee /etc/opt/rh/rh-mariadb101/my.cnf.d/character-set.cnf
-  echo character-set-server=utf8 |sudo tee -a /etc/opt/rh/rh-mariadb101/my.cnf.d/character-set.cnf
-  chmod 644 /etc/opt/rh/rh-mariadb101/my.cnf.d/character-set.cnf
-
-  sudo systemctl restart rh-mariadb101-mariadb
+  sudo systemctl enable --now mariadb.service
+  echo [mysqld] |sudo tee /etc/my.cnf.d/bind-address.cnf
+  echo bind-address=127.0.0.1 |sudo tee -a /etc/my.cnf.d/bind-address.cnf
+  sudo systemctl restart mariadb
 
   sudo yum install expect -y
 
   ## The following needs some thoughts about scl enable foo
-  #if [[ ! -e /var/opt/rh/rh-mariadb101/lib/mysql/misp/users.ibd ]]; then
+  #if [[ ! -e /var/opt/rh/rh-mariadb102/lib/mysql/misp/users.ibd ]]; then
 
-  # We ask interactively your password if not run as root
-  pw=""
-  if [[ "$EUID" -ne 0 ]]; then
-    read -s -p "Enter sudo password: " pw
-  fi
+  # Add your credentials if needed, if sudo has NOPASS, comment out the relevant lines
+  pw="Password1234"
 
   expect -f - <<-EOF
     set timeout 10
 
-    spawn sudo scl enable rh-mariadb101 mysql_secure_installation
-    expect {
-      "*sudo*" {
-        send "$pw\r"
-        exp_continue
-      }
-      "Enter current password for root (enter for none):" {
-        send -- "\r"
-      }
-    }
+    spawn sudo mysql_secure_installation
+    expect "*?assword*"
+    send -- "$pw\r"
+    expect "Enter current password for root (enter for none):"
+    send -- "\r"
     expect "Set root password?"
     send -- "y\r"
     expect "New password:"
@@ -362,15 +356,17 @@ EOF
 
   sudo yum remove tcl expect -y
 
-  sudo systemctl restart rh-mariadb101-mariadb
+  sudo systemctl restart mariadb
 
-  scl enable rh-mariadb101 "mysql -u $DBUSER_ADMIN -p$DBPASSWORD_ADMIN -e 'CREATE DATABASE $DBNAME;'"
-  scl enable rh-mariadb101 "mysql -u $DBUSER_ADMIN -p$DBPASSWORD_ADMIN -e \"GRANT USAGE on *.* to $DBUSER_MISP@localhost IDENTIFIED by '$DBPASSWORD_MISP';\""
-  scl enable rh-mariadb101 "mysql -u $DBUSER_ADMIN -p$DBPASSWORD_ADMIN -e \"GRANT ALL PRIVILEGES on $DBNAME.* to '$DBUSER_MISP'@'localhost';\""
-  scl enable rh-mariadb101 "mysql -u $DBUSER_ADMIN -p$DBPASSWORD_ADMIN -e 'FLUSH PRIVILEGES;'"
+  mysql -u $DBUSER_ADMIN -p$DBPASSWORD_ADMIN -e "CREATE DATABASE $DBNAME;"
+  mysql -u $DBUSER_ADMIN -p$DBPASSWORD_ADMIN -e "GRANT USAGE on *.* to $DBUSER_MISP@localhost IDENTIFIED by '$DBPASSWORD_MISP';"
+  mysql -u $DBUSER_ADMIN -p$DBPASSWORD_ADMIN -e "GRANT ALL PRIVILEGES on $DBNAME.* to '$DBUSER_MISP'@'localhost';"
+  mysql -u $DBUSER_ADMIN -p$DBPASSWORD_ADMIN -e 'FLUSH PRIVILEGES;'
 
-  $SUDO_WWW cat $PATH_TO_MISP/INSTALL/MYSQL.sql | sudo scl enable rh-mariadb101 "mysql -u $DBUSER_MISP -p$DBPASSWORD_MISP $DBNAME"
+  $SUDO_WWW cat $PATH_TO_MISP/INSTALL/MYSQL.sql | mysql -u $DBUSER_MISP -p$DBPASSWORD_MISP $DBNAME
 }
+
+
 
 apacheConfig_RHEL () {
   # Now configure your apache server with the DocumentRoot $PATH_TO_MISP/app/webroot/
@@ -582,9 +578,13 @@ configWorkersRHEL () {
 
   [Install]
   WantedBy=multi-user.target" |sudo tee /etc/systemd/system/misp-workers.service
-
+  
   sudo chmod +x $PATH_TO_MISP/app/Console/worker/start.sh
   sudo systemctl daemon-reload
+   
+  sudo checkmodule -M -m -o /tmp/workerstartsh.mod $PATH_TO_MISP/INSTALL/workerstartsh.te
+  sudo semodule_package -o /tmp/workerstartsh.pp -m /tmp/workerstartsh.mod
+  sudo semodule -i /tmp/workerstartsh.pp
 
   sudo systemctl enable --now misp-workers.service
 }

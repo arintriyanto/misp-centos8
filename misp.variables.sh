@@ -2,13 +2,14 @@
 export RUN_PYTHON='/usr/bin/scl enable rh-python36 '
 export RUN_MYSQL='/usr/bin/scl enable rh-mariadb101 '
 export RUN_PHP='/usr/bin/scl enable rh-php72 '
+export PHP_INI="/etc/php.ini"
 export MISP_USER='misp'
 export MISP_PASSWORD="$(openssl rand -hex 32)"
 export PATH_TO_MISP='/var/www/MISP'
 export CAKE="$PATH_TO_MISP/app/Console/cake"
 export HOSTNAME='misp.local'
 export FQDN='misp.local'
-export MISP_BASEURL='http://10.25.15.152'
+export MISP_BASEURL='http://10.25.15.154'
 export MISP_LIVE='1'
 export DBHOST='localhost'
 export DBNAME='misp'
