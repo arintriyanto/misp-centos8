@@ -1,9 +1,16 @@
-  #!/usr/bin/env bash
+#!/usr/bin/env bash
 
-  dnf groupremove "Development Tools" -y
-  dnf remove @httpd -y
-  dnf remove @mariadb -y
-  dnf remove gcc git zip \
+echo "Remove Development Tools"
+dnf groupremove "Development Tools" -y
+
+echo "Remove HTPPD"
+dnf remove @httpd -y
+
+echo "Remove mariadb"
+dnf remove @mariadb -y
+
+echo "Remove Dependencies"
+dnf remove gcc zip \
         httpd \
         mod_ssl \
         redis \
@@ -13,8 +20,9 @@
         python3-policycoreutils \
         policycoreutils-python-utils \
         libxslt-devel zlib-devel -y
-					 
-   dnf remove php php-fpm php-devel php-pear \
+
+echo "Remove Php & Dependencies"					 
+dnf remove php php-fpm php-devel php-pear \
         php-mysqlnd \
         php-ssdeep \
         php-intl \
@@ -26,12 +34,15 @@
         php-json \
         php-zip \
         php-gd -y
-		
-   rm -rf /var/lib/mariadb
-   rm -rf /home/misp
-   rm -rf /usr/share/mariadb
-   rm -rf /etc/httpd
-   rm -rf /etc/php-fpm.d
-   rm -rf /etc/php.d
 
-   reboot
+echo "Delete local direcotory"
+
+rm -rf /var/lib/mariadb
+rm -rf /home/misp
+rm -rf /usr/share/mariadb
+rm -rf /etc/httpd
+rm -rf /etc/php-fpm.d
+rm -rf /etc/php.d
+
+echo "Reboot"
+reboot
