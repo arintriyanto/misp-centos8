@@ -117,6 +117,8 @@ yumInstallCoreDeps () {
   #PHP_INI=/etc/php.ini
   sudo dnf install php php-fpm php-devel php-pear \
        php-mysqlnd \
+       php-ssdeep \
+       php-php-intl \
        php-mbstring \
        php-xml \
        php-bcmath \
@@ -746,7 +748,7 @@ updateGOWNTRHEL () {
   AUTH_KEY=$(cat /tmp/auth.key)
   rm /tmp/auth.key
 
-  debug "Updating Galaxies, ObjectTemplates, Warninglists, Noticelists and Templates"
+  echo "Updating Galaxies, ObjectTemplates, Warninglists, Noticelists and Templates"
   # Update the galaxies…
   # TODO: Fix updateGalaxies
   $SUDO_WWW  -- $CAKE Admin updateGalaxies
@@ -865,8 +867,6 @@ installMISPRHEL () {
 # End installMISPRHEL ()
 ## End Function Section ##
 
-sudo hostnamectl set-hostname ${HOSTNAME}
-sudo exec bash
 echo "Checking Linux distribution and flavour..."
 checkFlavour
 echo "Setting MISP variables"
@@ -876,7 +876,9 @@ sudo dnf config-manager --set-enabled PowerTools
 # If RHEL/CentOS is detected, run appropriate script
 if [[ "${FLAVOUR}" == "rhel" ]] || [[ "${FLAVOUR}" == "centos" ]]; then
   echo "Flavour="${FLAVOUR}
-  space 
+  space
+  sudo hostnamectl set-hostname ${HOSTNAME}
+  sudo exec bash 
   installMISPRHEL
   echo "Installation done !"
   exit
