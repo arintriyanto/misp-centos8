@@ -261,7 +261,7 @@ installCoreRHEL () {
   
   # Enable python3 for php-fpm
   sudo sed -i.org -e 's/^;\(clear_env = no\)/\1/' /etc/php-fpm.d/www.conf
-  sudo sed -i s'/listen = \/run\/php-fpm\/www.sock/listen = 127.0.0.1:9000/' /etc/php-fpm.d/www.conf
+  sudo sed -i 's/listen = \/run\/php-fpm\/www.sock/listen = 127.0.0.1:9000/' /etc/php-fpm.d/www.conf
 
   sudo systemctl restart php-fpm.service
   umask $UMASK
@@ -269,8 +269,10 @@ installCoreRHEL () {
   # Enable dependencies detection in the diagnostics page
   # This allows MISP to detect GnuPG, the Python modules' versions and to read the PHP settings.
   echo "env[PATH] = /usr/local/bin:/usr/bin:/bin" |sudo tee -a /etc/php-fpm.d/www.conf
-  #echo "env[LD_LIBRARY_PATH] = /opt/rh/httpd24/root/usr/lib64" |sudo tee -a /etc/php-fpm.d/www.conf
+  ;env[PATH] = /usr/local/bin:/usr/bin:/bin
 
+  #echo "env[LD_LIBRARY_PATH] = /opt/rh/httpd24/root/usr/lib64" |sudo tee -a /etc/php-fpm.d/www.conf
+  
   sudo systemctl restart php-fpm.service
 
 }
@@ -378,8 +380,8 @@ EOF
   mysql -u $DBUSER_ADMIN -p$DBPASSWORD_ADMIN -e 'FLUSH PRIVILEGES;'
 
   $SUDO_WWW cat $PATH_TO_MISP/INSTALL/MYSQL.sql | mysql -u $DBUSER_MISP -p$DBPASSWORD_MISP $DBNAME
-}
 
+}
 
 
 apacheConfig_RHEL () {
@@ -767,6 +769,11 @@ updateGOWNTRHEL () {
 # Final function to let the user know what happened
 theEndRHEL () {
   space
+  #Fixing indexing mysql 
+  echo"Fix indexing mysql"
+  mysql -u $DBUSER_MISP -p$DBPASSWORD_MISP misp -e "CREATE INDEX `event_id` ON `event_reports` (`event_id`);" |sudo tee -a /home/${MISP_USER}/update-mysql.txt
+  mysql -u $DBUSER_MISP -p$DBPASSWORD_MISP misp -e "CREATE INDEX `sharing_group_id` ON `event_reports` (`sharing_group_id`);" |sudo tee -a /home/${MISP_USER}/update-mysql.txt
+
   echo "Admin (root) DB Password: $DBPASSWORD_ADMIN" |$SUDO_CMD tee /home/${MISP_USER}/mysql.txt
   echo "User  (misp) DB Password: $DBPASSWORD_MISP"  |$SUDO_CMD tee -a /home/${MISP_USER}/mysql.txt
   echo "Authkey: $AUTH_KEY" |$SUDO_CMD tee -a /home/${MISP_USER}/MISP-authkey.txt

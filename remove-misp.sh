@@ -54,9 +54,12 @@ rm -rf /etc/php.d
 rm -rf /var/log/httpd/
 rm -rf /var/log/php-fpm/
 rm -rf /var/log/mariadb/
+
+# if you need to clean - remove all directory /var/www/MISP, but need to to build everything again, long time to waiting build LIEF
+# rm -rf /var/www/MISP
 sleep 2
 ldconfig
 
 echo "Reboot"
-sleep 5
+sleep 2
 reboot
