@@ -73,7 +73,7 @@ space () {
 
 centosEPEL () {
   # We need some packages from the Extra Packages for Enterprise Linux repository
-  sudo dnf install epel-release -y
+  sudo yum install epel-release -y
   
   # Since MISP 2.4 PHP 5.5 is a minimal requirement, so we need a newer version than CentOS base provides
   # Software Collections is a way do to this, see https://wiki.centos.org/AdditionalResources/Repositories/SCL
@@ -82,19 +82,19 @@ centosEPEL () {
 }
 
 enableEPEL () {
-  sudo dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm -y
+  sudo yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm -y
 }
 
 enableREMI () {
-  sudo dnf install dnf-utils http://rpms.remirepo.net/enterprise/remi-release-8.rpm -y
+  sudo yum install dnf-utils http://rpms.remirepo.net/enterprise/remi-release-8.rpm -y
 }
 
 yumInstallCoreDeps () {
   # Install the dependencies:
-  sudo dnf install @httpd -y
-  sudo dnf install @mariadb -y
+  sudo yum install @httpd -y
+  sudo yum install @mariadb -y
 
-  sudo dnf install gcc git zip \
+  sudo yum install gcc git zip \
                    httpd \
                    mod_ssl \
                    redis \
@@ -111,11 +111,13 @@ yumInstallCoreDeps () {
   # Enable and start redis
   sudo systemctl enable --now redis.service
   
-  dnf module reset php -y
-  dnf module enable php:remi-7.2 -y
+  dnf config-manager --set-enabled PowerTools
+
+  yum module reset php -y
+  yum module enable php:remi-7.2 -y
 
   #PHP_INI=/etc/php.ini
-  sudo dnf install php php-fpm php-devel php-pear \
+  sudo yum install php php-fpm php-devel php-pear \
        php-mysqlnd \
        php-mbstring \
        php-xml \
@@ -123,11 +125,10 @@ yumInstallCoreDeps () {
        php-opcache \
        php-json \
        php-zip \
+       php-pecl-redis5 \
        php-gd -y
-  
-  sudo dnf install -y php-pecl-redis5
 
-  sudo dnf install python3 python3-devel -y
+  sudo yum install python3 python3-devel -y
   sudo systemctl restart php-fpm.service
 }
 
@@ -287,10 +288,10 @@ installCake_RHEL ()
 
   ## sudo yum install php-redis -y
   sudo pecl channel-update pecl.php.net
-  #sudo pecl install redis
-  #sudo yes no|pecl install redis
-  #echo "extension=redis.so" |sudo tee /etc/php-fpm.d/redis.ini
-  #sudo ln -s /etc/php-fpm.d/redis.ini /etc/php.d/99-redis.ini
+  sudo pecl install redis
+  sudo yes no|pecl install redis
+  echo "extension=redis.so" |sudo tee /etc/php-fpm.d/redis.ini
+  sudo ln -s /etc/php-fpm.d/redis.ini /etc/php.d/99-redis.ini
   
   sudo systemctl restart php-fpm.service
 
