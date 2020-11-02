@@ -118,7 +118,7 @@ yumInstallCoreDeps () {
   sudo dnf install php php-fpm php-devel php-pear \
        php-mysqlnd \
        php-ssdeep \
-       php-php-intl \
+       php-intl \
        php-mbstring \
        php-xml \
        php-bcmath \
