@@ -73,7 +73,7 @@ space () {
 
 centosEPEL () {
   # We need some packages from the Extra Packages for Enterprise Linux repository
-  sudo yum install epel-release -y
+  sudo dnf install epel-release -y
   
   # Since MISP 2.4 PHP 5.5 is a minimal requirement, so we need a newer version than CentOS base provides
   # Software Collections is a way do to this, see https://wiki.centos.org/AdditionalResources/Repositories/SCL
@@ -82,7 +82,7 @@ centosEPEL () {
 }
 
 enableEPEL () {
-  sudo yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm -y
+  sudo dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm -y
 }
 
 enableREMI () {
@@ -91,10 +91,10 @@ enableREMI () {
 
 yumInstallCoreDeps () {
   # Install the dependencies:
-  sudo yum install @httpd -y
+  sudo dnf install @httpd -y
   sudo dnf install @mariadb -y
 
-  sudo yum install gcc git zip \
+  sudo dnf install gcc git zip \
                    httpd \
                    mod_ssl \
                    redis \
@@ -115,7 +115,7 @@ yumInstallCoreDeps () {
   dnf module enable php:remi-7.2 -y
 
   #PHP_INI=/etc/php.ini
-  sudo yum install php php-fpm php-devel php-pear \
+  sudo dnf install php php-fpm php-devel php-pear \
        php-mysqlnd \
        php-mbstring \
        php-xml \
@@ -127,7 +127,7 @@ yumInstallCoreDeps () {
   
   sudo dnf install -y php-pecl-redis5
 
-  sudo yum install python3 python3-devel -y
+  sudo dnf install python3 python3-devel -y
   sudo systemctl restart php-fpm.service
 }
 
