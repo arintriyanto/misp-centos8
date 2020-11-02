@@ -82,16 +82,16 @@ centosEPEL () {
 }
 
 enableEPEL () {
-  sudo dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm -y
+  sudo yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm -y
 }
 
 enableREMI () {
-  sudo dnf install dnf-utils http://rpms.remirepo.net/enterprise/remi-release-8.rpm -y
+  sudo yum install dnf-utils http://rpms.remirepo.net/enterprise/remi-release-8.rpm -y
 }
 
 yumInstallCoreDeps () {
   # Install the dependencies:
-  sudo dnf config-manager --set-enabled PowerTools
+  
   sudo dnf install @httpd -y
   sudo dnf install @mariadb -y
 
@@ -865,6 +865,7 @@ echo "Checking Linux distribution and flavour..."
 checkFlavour
 echo "Setting MISP variables"
 source misp.variables.sh
+sudo dnf config-manager --set-enabled PowerTools
 
 # If RHEL/CentOS is detected, run appropriate script
 if [[ "${FLAVOUR}" == "rhel" ]] || [[ "${FLAVOUR}" == "centos" ]]; then
