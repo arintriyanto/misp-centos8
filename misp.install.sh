@@ -77,16 +77,19 @@ centosEPEL () {
   
   # Since MISP 2.4 PHP 5.5 is a minimal requirement, so we need a newer version than CentOS base provides
   # Software Collections is a way do to this, see https://wiki.centos.org/AdditionalResources/Repositories/SCL
-  sudo yum install centos-release-scl -y
+  # sudo yum install centos-release-scl -y
+
 }
 
 enableEPEL () {
-  sudo yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm -y
+  sudo yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm -y
 }
 
 yumInstallCoreDeps () {
   # Install the dependencies:
   sudo yum install @httpd -y
+  sudo dnf install @mariadb -y
+  
   sudo yum install gcc git zip \
                    httpd \
                    mod_ssl \
@@ -184,13 +187,13 @@ installCoreRHEL () {
   cd $PATH_TO_MISP/app/files/scripts/lief
   $SUDO_WWW mkdir build
   cd build
-  $SUDO_WWW scl enable devtoolset-7 "bash -c 'cmake3 \
+  $SUDO_WWW cmake3 \
   -DLIEF_PYTHON_API=on \
   -DPYTHON_VERSION=3.6 \
   -DPYTHON_EXECUTABLE=$PATH_TO_MISP/venv/bin/python \
   -DLIEF_DOC=off \
   -DCMAKE_BUILD_TYPE=Release \
-  ..'"
+  ..
   $SUDO_WWW make -j3 pyLIEF
 
   if [ $? == 2 ]; then
@@ -273,7 +276,8 @@ installCake_RHEL ()
 
   ## sudo yum install php-redis -y
   sudo pecl channel-update pecl.php.net
-  sudo pecl install redis
+  #sudo pecl install redis
+  sudo yes no|pecl install redis
   echo "extension=redis.so" |sudo tee /etc/php-fpm.d/redis.ini
   sudo ln -s /etc/php-fpm.d/redis.ini /etc/php.d/99-redis.ini
   sudo systemctl restart php-fpm.service
