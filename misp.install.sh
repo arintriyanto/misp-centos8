@@ -227,8 +227,8 @@ installCoreRHEL () {
   echo $PATH_TO_MISP/app/files/scripts/lief/build/api/python |$SUDO_WWW tee $PATH_TO_MISP/venv/lib/python3.6/site-packages/lief.pth
 
   # install magic, pydeep
-  $SUDO_WWW $PATH_TO_MISP/venv/bin/pip install -U python-magic git+https://github.com/kbandla/pydeep.git plyara
-  #$SUDO_WWW $PATH_TO_MISP/venv/bin/pip install -U python-magic plyara
+  $SUDO_WWW $PATH_TO_MISP/venv/bin/pip install -U python-magic git+https://github.com/kbandla/pydeep.git
+  $SUDO_WWW $PATH_TO_MISP/venv/bin/pip install -U python-magic plyara
 
   # install PyMISP
   cd $PATH_TO_MISP/PyMISP
