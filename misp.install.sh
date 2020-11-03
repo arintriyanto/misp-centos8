@@ -589,28 +589,38 @@ echo "[Unit]
 
   [Service]
   Type=forking
-  User=apache
-  Group=apache
-  ExecStart=/var/www/MISP/app/Console/worker/start.sh
+  User=$WWW_USER
+  Group=$WWW_USER
+  ExecStart=$PATH_TO_MISP/app/Console/worker/start.sh
+  ExecStop=$PATH_TO_MISP/app/Console/worker/stop.sh
   Restart=always
   RestartSec=10
 
   [Install]
   WantedBy=multi-user.target" |sudo tee /etc/systemd/system/misp-workers.service
   
-  #sudo /sbin/restorecon -v /var/www/MISP/app/Console/worker/start.sh
   #sudo chmod +x /var/www/MISP/app/Console/worker/start.sh
   #sudo systemctl daemon-reload
   #sudo checkmodule -M -m -o /tmp/workerstartsh.mod $PATH_TO_MISP/INSTALL/workerstartsh.te
+  #sudo checkmodule -M -m -o /tmp/workerstartsh.mod /var/www/MISP/INSTALL/workerstartsh.te
   #sudo semodule_package -o /tmp/workerstartsh.pp -m /tmp/workerstartsh.mod
   #sudo semodule -i /tmp/workerstartsh.pp
+  #sudo systemctl enable --now misp-workers.service
+   
+   # Allow logrotate to read /var/www
+  #sudo checkmodule -M -m -o /tmp/misplogrotate.mod $PATH_TO_MISP/INSTALL/misplogrotate.te
+  #sudo semodule_package -o /tmp/misplogrotate.pp -m /tmp/misplogrotate.mod
+  #sudo semodule -i /tmp/misplogrotate.pp
 
   sudo chmod +x $PATH_TO_MISP/app/Console/worker/start.sh
-  sudo systemctl daemon-reload
+  sudo chcon -t bin_t /var/www/MISP/app/Console/worker/start.sh
+  sudo chcon -t bin_t /var/www/MISP/app/Console/worker/stop.sh
 
+  sudo systemctl daemon-reload
   sudo systemctl enable --now misp-workers.service
 
 }
+
 
 coreCAKERHEL () {
   echo "Running core Cake commands to set sane defaults for ${LBLUE}MISP${NC}"
@@ -767,10 +777,12 @@ updateGOWNTRHEL () {
 # Final function to let the user know what happened
 theEndRHEL () {
   space
-  #Fixing indexing mysql 
+  #Todo fixing indexing mysql 
   echo"Fix indexing mysql"
-  mysql -u $DBUSER_MISP -p$DBPASSWORD_MISP misp -e "CREATE INDEX `event_id` ON `event_reports` (`event_id`);" |sudo tee -a /home/${MISP_USER}/update-mysql.txt
-  mysql -u $DBUSER_MISP -p$DBPASSWORD_MISP misp -e "CREATE INDEX `sharing_group_id` ON `event_reports` (`sharing_group_id`);" |sudo tee -a /home/${MISP_USER}/update-mysql.txt
+  #"CREATE INDEX `event_id` ON `event_reports` (`event_id`);"
+  mysql -u $DBUSER_MISP -p$DBPASSWORD_MISP misp -e "CREATE INDEX \`event_id\` ON \`event_reports\` (\`event_id\`);" |sudo tee -a /home/${MISP_USER}/update-mysql.txt
+  #"CREATE INDEX `sharing_group_id` ON `event_reports` (`sharing_group_id`);"
+  mysql -u $DBUSER_MISP -p$DBPASSWORD_MISP misp -e "CREATE INDEX \`sharing_group_id\` ON \`event_reports\` (\`sharing_group_id\`);"
 
   echo "Admin (root) DB Password: $DBPASSWORD_ADMIN" |$SUDO_CMD tee /home/${MISP_USER}/mysql.txt
   echo "User  (misp) DB Password: $DBPASSWORD_MISP"  |$SUDO_CMD tee -a /home/${MISP_USER}/mysql.txt
