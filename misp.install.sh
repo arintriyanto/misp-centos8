@@ -779,10 +779,9 @@ updateGOWNTRHEL () {
 # Final function to let the user know what happened
 theEndRHEL () {
   space
-  #Todo fixing indexing mysql 
-  echo"Fix indexing mysql"
+  echo "Fix indexing mysql"
   #"CREATE INDEX `event_id` ON `event_reports` (`event_id`);"
-  mysql -u $DBUSER_MISP -p$DBPASSWORD_MISP misp -e "CREATE INDEX \`event_id\` ON \`event_reports\` (\`event_id\`);" |sudo tee -a /home/${MISP_USER}/update-mysql.txt
+  mysql -u $DBUSER_MISP -p$DBPASSWORD_MISP misp -e "CREATE INDEX \`event_id\` ON \`event_reports\` (\`event_id\`);"
   #"CREATE INDEX `sharing_group_id` ON `event_reports` (`sharing_group_id`);"
   mysql -u $DBUSER_MISP -p$DBPASSWORD_MISP misp -e "CREATE INDEX \`sharing_group_id\` ON \`event_reports\` (\`sharing_group_id\`);"
 
